@@ -1,12 +1,16 @@
 import math as m
 
 import cv2
+import numpy as np
 
+WIDTH = 1920
+HEIGHT = 1080
+CENTER_FRAME = np.array([int(WIDTH/2), int(HEIGHT/2)])
 
 def main():
     cap = cv2.VideoCapture(0)
-    cap.set (3 , 1280)
-    cap.set (4 , 960)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, WIDTH)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
     
     if not cap.isOpened():
         print("Not able to open")
@@ -44,19 +48,24 @@ def find_qr_code(frame):
         for i, data in enumerate(decoded_info):
             if data:
                 pts = decoded_points[i].astype(int).reshape((-1, 1, 2))
+                # Draw around qrcode
                 cv2.polylines(frame, [pts], isClosed=True, color=(0, 255, 0), thickness=3)
 
+                # Find all corners and give them apropriate names 
                 corners = decoded_points[i].astype(int)
                 top_left = corners[0]
-
                 lower_left = corners[3]
-
                 top_right = corners[1]
                 lower_right = corners[2]
                 
+                # Center qr code
                 avg_x = int((top_left[0] + lower_left[0] + top_right[0] + lower_right[0])/4)
                 avg_y = int((top_left[1] + lower_left[1] + top_right[1] + lower_right[1])/4)
+                
+                center_qr = np.array([avg_x, avg_y])
 
+            
+                
                 dx = top_right[0] - top_left[0]
                 dy = top_left[1] - top_right[1]
 
@@ -70,7 +79,6 @@ def find_qr_code(frame):
                     ang = m.atan(dy/dx)
                 
                 ang_deg = int(m.degrees(ang))
-                print(ang_deg)
 
                 # Text
                 font = cv2.FONT_HERSHEY_SIMPLEX
@@ -82,7 +90,7 @@ def find_qr_code(frame):
                 cv2.circle(frame, (avg_x, avg_y), radius=20, color=(0, 0, 255), thickness=-1)
                 cv2.line(frame, (top_left), (top_left[0] + dx, top_left[1] - dy), (255, 0, 0), 5)
                 cv2.putText(frame, str(ang_deg), (top_left[0] + 1, top_left[1] - 4), font, font_scale, text_color, thickness=thickness, lineType=cv2.LINE_AA)
-
+                cv2.line(frame, CENTER_FRAME, center_qr, (0,0,255), 5)
 
 
 
