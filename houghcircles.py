@@ -6,7 +6,7 @@ def nothing(x):
     pass
 
 # Load image and convert to grayscale
-img = cv2.imread('images/300mm.jpg')
+img = cv2.imread('images/250mm.jpg')
 if img is None:
     raise ValueError("Image not found")
 
