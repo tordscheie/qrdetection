@@ -6,6 +6,28 @@ import numpy as np
 WIDTH = 1280
 HEIGHT = 720
 
+class QRCode:
+    name:str
+    center_x:int
+    center_y:int
+    ang:int
+
+    def __init__(self,name,center_x, center_y, ang):
+        self.name = name
+        self.center_x = -(WIDTH//2 - center_x)
+        self.center_y = HEIGHT//2 - center_y
+        self.ang = ang
+
+    def __str__(self):
+        return (
+            f"{'Name':<10}: {self.name}\n"
+            f"{'Center X':<10}: {self.center_x}\n"
+            f"{'Center Y':<10}: {self.center_y}\n"
+            f"{'Angle':<10}: {self.ang}°"
+        )
+
+
+
 def find_qr(puck):
     """Kode for å ta inn en puck og returnerer dataen til pucken og hjørnene"""
     gray_puck = cv2.cvtColor(puck, cv2.COLOR_BGR2GRAY)
@@ -65,7 +87,7 @@ def find_puck(frame):
     if circles is not None:
         circles = np.uint16(np.around(circles))
         print(f"Successfully detected {len(circles[0])} pucks")
-        
+        qr_codes = []
         for i in circles[0, :]:
             center = (i[0], i[1])
             radius = int(i[2])
@@ -82,9 +104,9 @@ def find_puck(frame):
             else:
                 pnkt1 = (max(0, center[0]-radius), max(0, center[1]-radius))
                 pnkt2 = (max(0, center[0]+radius), max(0, center[1]+radius))
-            #cv2.circle(frame, center, radius, (0, 255, 0), 3)
             puck = frame[pnkt1[1]:pnkt2[1], pnkt1[0]:pnkt2[0]]
             
+
             if puck is not None:
                 data, box_points = find_qr(puck)
             ang = 0
@@ -92,7 +114,6 @@ def find_puck(frame):
             if len(box_points) > 0:
 
                 ang, pnkt = find_angle(box_points)
-                print(f"DATA: {data} - angle: {ang}")
 
                 # Frame rundt puck
                 # cv2.rectangle(frame,pnkt1, pnkt2, (0,0,255), 3)
@@ -104,16 +125,26 @@ def find_puck(frame):
                 # cv2.circle(puck, box_points[1,0], 10, (255, 0, 255), -1)
                 # cv2.line(puck, box_points[0,0],box_points[0,0] +pnkt, (0,0,255), 5 )
                 data = data[0]
-                ang = f"{ang}°"
+                
                 draw_text(frame, data[6], int(center[0]+radius), int(center[1]))
+
+                entry = [data, int(center[0]),int(center[1]), ang]
+                new_qr = QRCode(data, int(center[0]),int(center[1]), ang)
+                qr_codes.append(new_qr)
+
+                ang = f"{ang}°"
                 draw_text(frame, ang, int(center[0]- len(ang)*10), int(center[1]))
+    return (frame,(qr_codes))
 
-    return frame
-
-images = ['images/250mm.jpg', 'images/300mm.jpg', 'images/400mm.jpg', 'images/500mm.jpg']
-for image in images:
+if __name__ == '__main__':
+    image = 'images/400mm.jpg'
     frame = cv2.imread(image)
-    puck_with_qr = find_puck(frame)
+    puck_with_qr, qr_codes = find_puck(frame)
+    cv2.circle(frame, (WIDTH//2, HEIGHT//2), 10, (0,0,255), -1)
+    for qr in qr_codes:
+        print("-------------")
+        print(qr)
+        print("-------------")
     cv2.imshow(image, puck_with_qr)
     cv2.waitKey(0)
-cv2.destroyAllWindows()
+    cv2.destroyAllWindows()
