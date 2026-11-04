@@ -54,7 +54,7 @@ class QRCode:
             ang_deg = int(m.degrees(ang))
             return ang_deg
 
-def find_codes(cv2image):
+def find_codes(cv2image) -> list[QRCode]:
     codes =[]
     for barcode in decode(cv2image):
         points = barcode.polygon
