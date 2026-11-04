@@ -56,7 +56,20 @@ class QRCode:
 
 def find_codes(cv2image) -> list[QRCode]:
     codes =[]
-    for barcode in decode(cv2image):
+    gray = cv2.cvtColor(cv2image, cv2.COLOR_BGR2GRAY)
+    blurred = cv2.GaussianBlur(gray, (3, 3), 0)
+    binary_image = cv2.adaptiveThreshold(
+        blurred,
+        255,
+        cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+        cv2.THRESH_BINARY,
+        51,  # Block size (must be an odd number, e.g., 3, 5, 11, 21...)
+        5,   # Constant subtracted from the mean
+    )
+    cv2.imshow("img", binary_image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    for barcode in decode(binary_image):
         points = barcode.polygon
         name = barcode.data.decode('utf-8')            
         code = QRCode(name, points)
@@ -76,16 +89,17 @@ def draw_text(frame, data, x, y):
 
 
 if __name__ == '__main__':
-    image = 'images/300mm.jpg'
-    frame = cv2.imread(image)
+    images = ['images/250mm.jpg', 'images/300mm.jpg', 'images/400mm.jpg', 'images/500mm.jpg']
    #puck_with_qr, qr_codes = find_puck(frame)
-    cv2.circle(frame, (WIDTH//2, HEIGHT//2), 10, (0,0,255), -1)
-    codes = find_codes(frame)
-    for qr in codes:
-        cv2.circle(frame, (int(qr._center_x),int(qr._center_y)), 10, (0,150,150), -1)
-        print("-------------")
-        print(qr)
-        print("-------------")
-    cv2.imshow(image, frame)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    for image in images:
+        frame = cv2.imread(image)
+        cv2.circle(frame, (WIDTH//2, HEIGHT//2), 10, (0,0,255), -1)
+        codes = find_codes(frame)
+        for qr in codes:
+            cv2.circle(frame, (int(qr._center_x),int(qr._center_y)), 10, (0,150,150), -1)
+            print("-------------")
+            print(qr)
+            print("-------------")
+        cv2.imshow(image, frame)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
