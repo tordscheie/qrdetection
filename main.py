@@ -6,25 +6,55 @@ import numpy as np
 WIDTH = 1280
 HEIGHT = 720
 
+def scan_for_qr(frame):
+    puck_with_qr, qr_codes = find_puck(frame)
+    cv2.circle(frame, (WIDTH//2, HEIGHT//2), 10, (0,0,255), -1)
+    for qr in qr_codes:
+        print("-------------")
+        print(qr)
+        print("-------------")
+    return (puck_with_qr, qr_codes)
+
 class QRCode:
     name:str
     center_x:int
     center_y:int
     ang:int
+    quaternion: list()
 
     def __init__(self,name,center_x, center_y, ang):
         self.name = name
         self.center_x = -(WIDTH//2 - center_x)
         self.center_y = HEIGHT//2 - center_y
         self.ang = ang
+        self.quaternion = self.z_degrees_to_quaternion(ang)
 
     def __str__(self):
         return (
             f"{'Name':<10}: {self.name}\n"
             f"{'Center X':<10}: {self.center_x}\n"
             f"{'Center Y':<10}: {self.center_y}\n"
-            f"{'Angle':<10}: {self.ang}°"
+            f"{'Angle':<10}: {self.ang}°\n"
+            f"{'Quaternion':<10}: {self.quaternion}"
         )
+
+    def z_degrees_to_quaternion(self, rotation_z_degrees):
+        """Convert a rotation about the z-axis in degrees to Quaternion.
+        """
+        roll = m.pi
+        pitch = 0
+        yaw = m.radians(rotation_z_degrees)
+
+        qw = round(m.cos(roll / 2) * m.cos(pitch / 2) * m.cos(yaw / 2) + m.sin(roll / 2) * m.sin(
+            pitch / 2) * m.sin(yaw / 2))
+        qx = round(m.sin(roll / 2) * m.cos(pitch / 2) * m.cos(yaw / 2) - m.cos(roll / 2) * m.sin(
+            pitch / 2) * m.sin(yaw / 2))
+        qy = round(m.cos(roll / 2) * m.sin(pitch / 2) * m.cos(yaw / 2) + m.sin(roll / 2) * m.cos(
+            pitch / 2) * m.sin(yaw / 2))
+        qz = round(m.cos(roll / 2) * m.cos(pitch / 2) * m.sin(yaw / 2) - m.sin(roll / 2) * m.sin(
+            pitch / 2) * m.cos(yaw / 2))
+
+        return [qw, qx, qy, qz]
 
 
 

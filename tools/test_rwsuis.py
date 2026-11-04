@@ -1,6 +1,6 @@
 from rwsuis import RWS
 
-# help(RWS) # display useful help on package
+help(RWS) # display useful help on package
 # wrd = robot.get_rapid_variable("WRD")
 # if (wrd==0): 
  #    print(" Robot is waiting for Python to set ’ WPW ’ ")
